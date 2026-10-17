@@ -1,0 +1,20 @@
+# secretos: la API key va en entorno o en Secrets Manager, nunca en el repo
+.env
+.env.*
+!env.example
+*.key
+riot_key*
+
+# binarios
+/etl
+/bin/
+*.exe
+
+# data bajada del API: no se publica (ver README, seccion Datos y ToS)
+/data/
+*.json.gz
+cache/
+
+# locales
+.DS_Store
+*.log

@@ -1,0 +1,30 @@
+services:
+  db:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      retries: 5
+
+  # Los argumentos van en la invocacion, no en la imagen:
+  #   docker compose run --rm etl census -regions NA1 -tiers MASTER-CHALLENGER
+  #   docker compose run --rm etl crawl  -regions NA1 -tiers MASTER-CHALLENGER
+  #   docker compose run --rm etl stats
+  etl:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://db:27017
+      MONGO_DB: ${MONGO_DB:-lol_analyze}
+      RIOT_API_KEY: ${RIOT_API_KEY:?falta RIOT_API_KEY: cp env.example .env}
+
+volumes:
+  mongodata:

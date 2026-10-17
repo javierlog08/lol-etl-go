@@ -1,0 +1,53 @@
+{
+  "family": "lol-etl-go",
+  "requiresCompatibilities": ["FARGATE"],
+  "networkMode": "awsvpc",
+  "cpu": "1024",
+  "memory": "2048",
+  "runtimePlatform": {
+    "cpuArchitecture": "ARM64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/lolAnalyzeEtlTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "etl",
+      "image": "ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/lol-etl-go:latest",
+      "essential": true,
+      "command": ["run", "-regions", "LA1", "-tiers", "DIAMOND-CHALLENGER"],
+      "environment": [
+        { "name": "ETL_QUEUE", "value": "420" },
+        { "name": "ETL_QUEUE_NAME", "value": "RANKED_SOLO_5x5" },
+        { "name": "ETL_SINCE", "value": "336h" },
+        { "name": "ETL_TIMELINES", "value": "true" },
+        { "name": "ETL_DISCOVER_WORKERS", "value": "24" },
+        { "name": "ETL_FETCH_WORKERS", "value": "32" },
+        { "name": "ETL_LOG_LEVEL", "value": "info" },
+        { "name": "MONGO_DB", "value": "lol_analyze" }
+      ],
+      "secrets": [
+        {
+          "name": "RIOT_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:lol-etl-go/riot-api-key"
+        },
+        {
+          "name": "MONGO_URI",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:ACCOUNT_ID:secret:lol-etl-go/mongo-uri"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/lol-etl-go",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "etl",
+          "awslogs-create-group": "true"
+        }
+      },
+      "stopTimeout": 120,
+      "readonlyRootFilesystem": true,
+      "linuxParameters": { "initProcessEnabled": true }
+    }
+  ]
+}
